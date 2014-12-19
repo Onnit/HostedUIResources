@@ -79,7 +79,7 @@ class BV {
             'staging' => FALSE,
             'subject_type' => 'product',
             'latency_timeout' => 1000,
-            'current_page_url' => $params['current_page_url'], //get the current page url passed in as a "parameter"
+            'current_page_url' => isset($params['current_page_url']) ? $params['current_page_url'] : $this->_getCurrentUrl(), //get the current page url passed in as a "parameter"
             'base_page_url' => $this->_getCurrentUrl(),
             'bot_detection' => FALSE,  // bot detection should only be enabled if average execution time regularly exceeds 350ms.
             'include_display_integration_code' => FALSE,  
@@ -266,6 +266,11 @@ class Base{
     }
 
 
+    public function isBot()
+    {
+        return  $this->_isBot();
+    }
+
     // --------------------------------------------------------------------
     /*  Private methods. Internal workings of SDK.                       */
     //--------------------------------------------------------------------
@@ -369,11 +374,19 @@ class Base{
         }
         
         
-        preg_match('/\/(\d+?)\/[^\/]+$/', $bvparam, $page_number);
-        $page_number = max(1, (int) $page_number[1]);
+        if ( isset($bvparam) && preg_match('/\/(\d+?)\/[^\/]+$/', $bvparam, $page_number) ) {
+            $page_number = (int) $page_number[1];
+        } else {
+            $page_number = 1;
+        }
 
         // remove the bvrrp parameter from the base URL so we don't keep appending it
-        $seo_param = str_replace('/', '\/', $bvparam); // need to escape slashes for regex
+        if ( isset($bvparam) ) {
+            $seo_param = str_replace('/', '\/', $bvparam); // need to escape slashes for regex
+        } else {
+            $seo_param = '';
+        }
+
         $this->config['base_page_url'] = preg_replace('/[?&]bvrrp='.$seo_param.'/', '', $this->config['base_page_url']);
 
         return $page_number;
